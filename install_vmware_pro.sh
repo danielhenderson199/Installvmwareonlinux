@@ -1,36 +1,44 @@
 #!/bin/bash
-
 set -e
 
-# Configurable settings
+# VMware Workstation Pro download URL (v17.5.0)
 VMWARE_URL="https://download3.vmware.com/software/wkst/file/VMware-Workstation-Full-17.5.0-22583795.x86_64.bundle"
-BUNDLE_NAME="VMware-Workstation-Full-17.5.0-22583795.x86_64.bundle"
+BUNDLE="VMware-Workstation-Full-17.5.0-22583795.x86_64.bundle"
 
-# Root check
-if [[ $EUID -ne 0 ]]; then
-    echo "❌ Please run this script as root (sudo)."
+check_root() {
+  if [[ $EUID -ne 0 ]]; then
+    echo "Please run this script with sudo or as root."
     exit 1
-fi
+  fi
+}
 
-# Install dependencies
-echo "📦 Installing build tools and headers..."
-apt update
-apt install -y build-essential linux-headers-$(uname -r) dkms
+install_dependencies() {
+  echo "Updating package lists..."
+  apt update
 
-# Download VMware Workstation Pro
-echo "⬇️ Downloading VMware Workstation Pro..."
-wget -O "$BUNDLE_NAME" "$VMWARE_URL"
+  echo "Installing build tools, dkms, and kernel headers..."
+  apt install -y build-essential dkms linux-headers-$(uname -r) wget
+}
 
-# Make it executable
-chmod +x "$BUNDLE_NAME"
+download_vmware() {
+  echo "Downloading VMware Workstation Pro installer..."
+  wget -O "$BUNDLE" "$VMWARE_URL"
+  chmod +x "$BUNDLE"
+}
 
-# Run installer silently
-echo "🚀 Installing VMware Workstation Pro..."
-./"$BUNDLE_NAME" --required --eulas-agreed
+install_vmware() {
+  echo "Running VMware installer..."
+  ./"$BUNDLE" --required --eulas-agreed
+}
 
-# Check installation
-if command -v vmware &>/dev/null; then
-    echo "✅ VMware Workstation Pro installed successfully!"
-else
-    echo "⚠️ Installation may have failed. 'vmware' not found in PATH."
-fi
+main() {
+  check_root
+  install_dependencies
+  download_vmware
+  install_vmware
+
+  echo "VMware Workstation Pro installation complete."
+  echo "You can now run VMware by typing 'vmware' in your terminal."
+}
+
+main
