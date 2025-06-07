@@ -1,23 +1,14 @@
 #!/bin/bash
 set -e
 
-# VMware Workstation Pro download URL (v17.5.0)
 VMWARE_URL="https://download3.vmware.com/software/wkst/file/VMware-Workstation-Full-17.5.0-22583795.x86_64.bundle"
 BUNDLE="VMware-Workstation-Full-17.5.0-22583795.x86_64.bundle"
 
 check_root() {
   if [[ $EUID -ne 0 ]]; then
-    echo "Please run this script with sudo or as root."
+    echo "Please run this script as root (sudo)."
     exit 1
   fi
-}
-
-install_dependencies() {
-  echo "Updating package lists..."
-  apt update
-
-  echo "Installing build tools, dkms, and kernel headers..."
-  apt install -y build-essential dkms linux-headers-$(uname -r) wget
 }
 
 download_vmware() {
@@ -26,19 +17,18 @@ download_vmware() {
   chmod +x "$BUNDLE"
 }
 
-install_vmware() {
-  echo "Running VMware installer..."
-  ./"$BUNDLE" --required --eulas-agreed
+install_vmware_no_modules() {
+  echo "Installing VMware Workstation Pro WITHOUT building kernel modules..."
+  ./"$BUNDLE" --console --eulas-agreed --required --ignore-kernel-modules
 }
 
 main() {
   check_root
-  install_dependencies
   download_vmware
-  install_vmware
+  install_vmware_no_modules
 
-  echo "VMware Workstation Pro installation complete."
-  echo "You can now run VMware by typing 'vmware' in your terminal."
+  echo "Installation finished. NOTE: VMware kernel modules are NOT built."
+  echo "VMware might NOT work properly without kernel modules."
 }
 
 main
